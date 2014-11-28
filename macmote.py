@@ -127,10 +127,17 @@ display.set_mode(mode, flags)
 #display.set_mode((640, 480))
 screen = display.get_surface()
 width, height = screen.get_size()
+txtfont = pygame.font.SysFont(None, 40)
 
 mouse.set_visible(False)
 
 fingers = []
+
+from xbmcjson import XBMC, PLAYER_VIDEO
+
+xbmc = XBMC("http://bh:8888/jsonrpc")
+gest = '0x'
+lastgest = '0x'
 
 while True:
     if touches:
@@ -138,6 +145,7 @@ while True:
 
     #print frame, timestamp
     screen.fill((0xef, 0xef, 0xef))
+    draw.line(screen, (0, 0, 0), (width/2, 0), (width/2, height), 4)
 
     prev = None
     for i, finger in enumerate(fingers):
@@ -151,6 +159,23 @@ while True:
         #print "finger", i, "at", (x, y)
         #xofs = int(finger.minor_axis / 2)
         #yofs = int(finger.major_axis / 2)
+
+	if i == 0:
+	    gest = ''
+	    if x >= 0 and x < 180:
+		gest = 'L16x'
+	    elif x >= 180 and x < 359:
+		gest = 'L8x'
+	    elif x >= 359 and x < 538:
+		gest = 'L4x'
+	    elif x >= 538 and x < 755:
+		gest = '0x'
+	    elif x >= 755 and x < 896:
+		gest = 'R4x'
+	    elif x >= 896 and x < 1072:
+		gest = 'R8x'
+	    elif x >= 1072:
+		gest = 'R16x'
 
         if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
@@ -168,7 +193,29 @@ while True:
         posvy = y + vy / 10 * height
         draw.line(screen, 0, p, (posvx, posvy))
 
-    # EXIT! One finger still, four motioning quickly downward.
+    if lastgest != gest:
+	lastgest = gest
+	label = txtfont.render(gest, 1, (0, 0, 0))
+	screen.blit(label, (100,100))
+	if lastgest == '0x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 1})
+	elif lastgest == 'R4x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 4})
+	elif lastgest == 'R8x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 8})
+	elif lastgest == 'R16x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 16})
+	elif lastgest == 'L4x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': -4})
+	elif lastgest == 'L8x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': -8})
+	elif lastgest == 'L16x':
+	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': -16})
+
+
+
+
+   # EXIT! One finger still, four motioning quickly downward.
     if len(fingers) == 5:
         n_still = 0
         n_down = 0
