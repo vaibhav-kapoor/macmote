@@ -133,11 +133,16 @@ mouse.set_visible(False)
 
 fingers = []
 
-from xbmcjson import XBMC, PLAYER_VIDEO
-
-xbmc = XBMC("http://bh:8888/jsonrpc")
 gest = '0x'
 lastgest = '0x'
+start = None
+df = 0
+
+from xbmc_client import DummyClient
+
+ws = DummyClient('ws://bh:9090/', protocols=['http-only', 'chat'])
+ws.connect()
+print 'Connected'
 
 while True:
     if touches:
@@ -145,7 +150,16 @@ while True:
 
     #print frame, timestamp
     screen.fill((0xef, 0xef, 0xef))
-    draw.line(screen, (0, 0, 0), (width/2, 0), (width/2, height), 4)
+    draw.line(screen, (0, 0, 0), (620, 0), (620, height), 4)
+    draw.line(screen, (0, 0, 0), (570, height/2+20), (570, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (670, height/2+20), (670, height/2-20), 4)
+
+    event = pygame.event.poll()
+
+    if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+	ws.close()
+	print 'Exiting'
+	break
 
     prev = None
     for i, finger in enumerate(fingers):
@@ -160,24 +174,7 @@ while True:
         #xofs = int(finger.minor_axis / 2)
         #yofs = int(finger.major_axis / 2)
 
-	if i == 0:
-	    gest = ''
-	    if x >= 0 and x < 180:
-		gest = 'L16x'
-	    elif x >= 180 and x < 359:
-		gest = 'L8x'
-	    elif x >= 359 and x < 538:
-		gest = 'L4x'
-	    elif x >= 538 and x < 755:
-		gest = '0x'
-	    elif x >= 755 and x < 896:
-		gest = 'R4x'
-	    elif x >= 896 and x < 1072:
-		gest = 'R8x'
-	    elif x >= 1072:
-		gest = 'R16x'
-
-        if prev:
+	if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
             draw.circle(screen, 0, prev[0], prev[1], 0)
         prev = p, r
@@ -193,30 +190,16 @@ while True:
         posvy = y + vy / 10 * height
         draw.line(screen, 0, p, (posvx, posvy))
 
-    if lastgest != gest:
-	lastgest = gest
-	label = txtfont.render(gest, 1, (0, 0, 0))
-	screen.blit(label, (100,100))
-	if lastgest == '0x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 1})
-	elif lastgest == 'R4x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 4})
-	elif lastgest == 'R8x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 8})
-	elif lastgest == 'R16x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': 16})
-	elif lastgest == 'L4x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': -4})
-	elif lastgest == 'L8x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': -8})
-	elif lastgest == 'L16x':
-	    xbmc.Player.SetSpeed({'playerid': PLAYER_VIDEO, 'speed': -16})
 
+    #if lastgest != gest:
+	#lastgest = gest
+	#label = txtfont.render(gest, 1, (0, 0, 0))
+	#screen.blit(label, (100,100))
 
-
-
-   # EXIT! One finger still, four motioning quickly downward.
-    if len(fingers) == 5:
+    # EXIT! One finger still, four motioning quickly downward.
+    if len(fingers) == 1:
+	if not start: start = time.time()
+    elif len(fingers) == 5:
         n_still = 0
         n_down = 0
         for i, finger in enumerate(fingers):
@@ -229,6 +212,19 @@ while True:
                 n_down += 1
         if n_still == 1 and n_down == 4:
             break
+    else:
+	end = time.time()
+	if start: df = end - start
+	start = None
+
+    if df >= 0.1875:
+	ws.play_pause()
+
+	label = txtfont.render(str(df), 1, (0, 0, 0))
+	screen.blit(label, (100,100))
+    else:
+	pass
+
 
     display.flip()
 
