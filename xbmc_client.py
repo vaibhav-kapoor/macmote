@@ -27,33 +27,33 @@ class DummyClient(WebSocketClient):
 
     def play_pause(self):
 	command = {"jsonrpc": "2.0", "method": "Player.PlayPause",
-		    "params": { "playerid": 1 }, "id": 1}
-	ws.send(json.dumps(command))
+		    "params": { "playerid": 1 }}
+	self.send(json.dumps(command))
 
     def set_speed(self, speed):
 	command = {"jsonrpc": "2.0", "method": "Player.SetSpeed",
-		"params": { "playerid": 1, "speed": speed }, "id": 1}
-	ws.send(json.dumps(command))
+		"params": { "playerid": 1, "speed": speed }}
+	self.send(json.dumps(command))
 
     def set_volume(self, volume):
-	command = {"jsonrpc": "2.0", "method": "Player.SetVolume",
-		    "params": { "playerid": 1, "volume": volume }, "id": 1}
-	ws.send(json.dumps(command))
+	command = {"jsonrpc": "2.0", "method": "Application.SetVolume",
+		    "params": { "volume": volume }}
+	self.send(json.dumps(command))
 
     def input_right(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Right",
-		    "params": {}, "id": 1}
-	ws.send(json.dumps(command))
+		    "params": {}}
+	self.send(json.dumps(command))
 
     def input_left(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Left",
-		    "params": {}, "id": 1}
-	ws.send(json.dumps(command))
+		    "params": {}}
+	self.send(json.dumps(command))
 
     def input_select(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Left",
-		    "params": {}, "id": 1}
-	ws.send(json.dumps(command))
+		    "params": {}}
+	self.send(json.dumps(command))
 
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         ws.connect()
         #ws.run_forever()
 	print 'Started Websocket client'
-	command = {"jsonrpc": "2.0", "method": "Input.Left", "id": 1}
+	command = {"jsonrpc": "2.0", "method": "Input.Left"}
 
 	while True:
 	    for event in pygame.event.get():
@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
 		if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
 		    print 'command pressed'
-		    ws.set_speed(-4)
+		    ws.play_pause()
 
 	    screen.fill((0,0,0))
 	    pygame.display.flip()

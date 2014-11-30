@@ -133,16 +133,22 @@ mouse.set_visible(False)
 
 fingers = []
 
-gest = '0x'
-lastgest = '0x'
 start = None
+prevtime = None
 df = 0
+curpos = (0, 0)
+curvel = (0, 0)
 
 from xbmc_client import DummyClient
 
 ws = DummyClient('ws://bh:9090/', protocols=['http-only', 'chat'])
 ws.connect()
 print 'Connected'
+
+prevspeed = 0
+volume = 0
+ppsent = False
+yvel = None
 
 while True:
     if touches:
@@ -151,8 +157,20 @@ while True:
     #print frame, timestamp
     screen.fill((0xef, 0xef, 0xef))
     draw.line(screen, (0, 0, 0), (620, 0), (620, height), 4)
-    draw.line(screen, (0, 0, 0), (570, height/2+20), (570, height/2-20), 4)
-    draw.line(screen, (0, 0, 0), (670, height/2+20), (670, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (540, height/2+20), (540, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (700, height/2+20), (700, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (840, height/2+20), (840, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (400, height/2+20), (400, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (980, height/2+20), (980, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (280, height/2+20), (280, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2-100), (640, height/2-100), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2-200), (640, height/2-200), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2-300), (640, height/2-300), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2), (640, height/2), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2+100), (640, height/2+100), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2+200), (640, height/2+200), 4)
+    draw.line(screen, (0, 0, 0), (600, height/2+300), (640, height/2+300), 4)
+
 
     event = pygame.event.poll()
 
@@ -174,6 +192,10 @@ while True:
         #xofs = int(finger.minor_axis / 2)
         #yofs = int(finger.major_axis / 2)
 
+	if i == 0:
+	    curpos = p
+	    curvel = (vel.x, vel.y)
+
 	if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
             draw.circle(screen, 0, prev[0], prev[1], 0)
@@ -191,16 +213,15 @@ while True:
         draw.line(screen, 0, p, (posvx, posvy))
 
 
-    #if lastgest != gest:
-	#lastgest = gest
-	#label = txtfont.render(gest, 1, (0, 0, 0))
-	#screen.blit(label, (100,100))
-
     # EXIT! One finger still, four motioning quickly downward.
+    end = time.time()
+    if start: df = end - start
+
     if len(fingers) == 1:
 	if not start: start = time.time()
+
     elif len(fingers) == 5:
-        n_still = 0
+	n_still = 0
         n_down = 0
         for i, finger in enumerate(fingers):
             vel = finger.normalized.velocity
@@ -213,17 +234,56 @@ while True:
         if n_still == 1 and n_down == 4:
             break
     else:
-	end = time.time()
-	if start: df = end - start
 	start = None
+	ppsent = False
+	#if prevspeed != 1:
+    	    #ws.set_speed(1)
+	    #prevspeed = 1
+	df = 0
 
-    if df >= 0.1875:
-	ws.play_pause()
+    if df > 0 and df <= 0.1875:
+	if not ppsent:
+	    ws.play_pause()
+	    ppsent = True
+    elif df > 0.1875:
 
-	label = txtfont.render(str(df), 1, (0, 0, 0))
-	screen.blit(label, (100,100))
-    else:
-	pass
+	if curvel[0] > 0.15 or curvel[0] < -0.15:
+	    if curpos[0] <= 280:
+		if prevspeed != -16:
+		    ws.set_speed(-16)
+		    prevspeed = -16
+	    elif curpos[0] > 280 and curpos[0] <= 400:
+		if prevspeed != -8:
+		    ws.set_speed(-8)
+		    prevspeed = -8
+	    elif curpos[0] > 400 and curpos[0] <= 540:
+		if prevspeed != -4:
+		    ws.set_speed(-4)
+		    prevspeed = -4
+	    elif curpos[0] > 540 and curpos[0] <= 700:
+		if prevspeed != 1:
+		    ws.set_speed(1)
+		    prevspeed = 1
+	    elif curpos[0] > 700 and curpos[0] <= 840:
+		if prevspeed != 4:
+		    ws.set_speed(4)
+		    prevspeed = 4
+	    elif curpos[0] > 840 and curpos[0] <= 980:
+		if prevspeed != 8:
+		    ws.set_speed(8)
+		    prevspeed = 8
+	    elif curpos[0] > 980:
+		if prevspeed != 16:
+		    ws.set_speed(16)
+		    prevspeed = 16
+
+	if curpos[1] > 20:
+	    if not prevtime: prevtime = time.time()
+	    curtime = time.time() - prevtime
+	    if curtime > 0.1:
+		if volume <=100: volume += 1
+		ws.set_volume(volume)
+		prevtime = time.time()
 
 
     display.flip()
