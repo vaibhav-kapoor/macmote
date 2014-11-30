@@ -2,10 +2,18 @@
 
 from ws4py.client.threadedclient import WebSocketClient
 
+import threading
 import pygame
 import json
 
 class DummyClient(WebSocketClient):
+    def __init__(self, url, protocols=None):
+        """docstring for __init__"""
+        WebSocketClient.__init__(self, url, protocols)
+        self.appstatus = 'navigation'
+        self._th = threading.Thread(target=self.run, name='DummyClient')
+        self._th.daemon = True
+
     def opened(self):
         def data_provider():
             for i in range(1, 200, 25):
@@ -21,7 +29,18 @@ class DummyClient(WebSocketClient):
         print "Closed down", code, reason
 
     def received_message(self, m):
-        print m
+        jsonm = json.loads(m.data)
+        if jsonm['method'] == 'Player.OnPlay':
+            self.appstatus = 'playback'
+        elif jsonm['method'] == 'Player.OnStop':
+            self.appstatus = 'navigation'
+
+        #print self.appstatus
+
+
+
+        #if m['method'] == 'Player.OnPlay':
+        #    print 'playing'
         if len(m) == 175:
             self.close(reason='Bye bye')
 
