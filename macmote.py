@@ -143,6 +143,8 @@ prevspeed = 0
 
 prevtime = None
 navtime = None
+trialstart = None
+trialtime = 0
 
 volume = 0
 from xbmc_client import DummyClient
@@ -152,23 +154,67 @@ print 'Connected'
 
 def speed_coord(curpos):
     speed = 0
-    if curpos[0] <= 280:
+    if curpos[0] <= 280 and curpos[0] > 0:
 	speed = -16
+	draw.rect(screen, (65,105,225), (0, 0, 280, height), 0)
     elif curpos[0] > 280 and curpos[0] <= 400:
 	speed = -8
+	draw.rect(screen, (100,149,237), (280, 0, 120, height), 0)
     elif curpos[0] > 400 and curpos[0] <= 540:
 	speed = -4
+	draw.rect(screen, (30,144,255), (400, 0, 140, height), 0)
     elif curpos[0] > 540 and curpos[0] <= 700:
 	speed = 1
+	draw.rect(screen, (0,0,0), (540, 320, 160, 130), 1)
     elif curpos[0] > 700 and curpos[0] <= 840:
 	speed = 4
+	draw.rect(screen, (255,127,80), (700, 0, 160, height), 0)
     elif curpos[0] > 840 and curpos[0] <= 980:
 	speed = 8
+	draw.rect(screen, (255,99,71), (840, 0, 140, height), 0)
     elif curpos[0] > 980:
 	speed = 16
+	draw.rect(screen, (255,69,0), (980, 0, width-980, height), 0)
 
     return speed
 
+def draw_lines():
+
+    draw.line(screen, (0, 0, 0), (620, 360), (620, 410), 2)
+    draw.line(screen, (0, 0, 0), (595, 385), (645, 385), 2)
+    #draw.rect(screen, (0,0,0), (540, 320, 160, 130), 1)
+    #draw.line(screen, (0, 0, 0), (595, 400), (645, 400), 1)
+    #draw.line(screen, (0, 0, 0), (540, height/2+50), (540, height/2-80), 1)
+    #draw.line(screen, (0, 0, 0), (699, height/2+50), (699, height/2-80), 1)
+    #draw.line(screen, (0, 0, 0), (839, height/2+50), (839, height/2-80), 1)
+    #draw.line(screen, (0, 0, 0), (400, height/2+50), (400, height/2-80), 1)
+    #draw.line(screen, (0, 0, 0), (980, height/2+50), (980, height/2-80), 1)
+    #draw.line(screen, (0, 0, 0), (280, height/2+50), (280, height/2-80), 1)
+    #draw.line(screen, (0, 0, 0), (600, height/2-100), (640, height/2-100), 2)
+    #draw.line(screen, (0, 0, 0), (600, height/2-200), (640, height/2-200), 2)
+    #draw.line(screen, (0, 0, 0), (600, height/2-300), (640, height/2-300), 2)
+    #draw.line(screen, (0, 0, 0), (600, height/2), (640, height/2), 2)
+    #draw.line(screen, (0, 0, 0), (600, height/2+100), (640, height/2+100), 2)
+    #draw.line(screen, (0, 0, 0), (600, height/2+200), (640, height/2+200), 2)
+    #draw.line(screen, (0, 0, 0), (600, height/2+300), (640, height/2+300), 2)
+
+def draw_rectangles():
+    pass
+    #draw.rect(screen, (0,0,0), (540, 320, 160, 130), 1)
+
+    #FW/RW
+    #draw.rect(screen, (255,127,80), (700, 0, 160, height), 0)
+    #draw.rect(screen, (255,99,71), (840, 0, 140, height), 0)
+    #draw.rect(screen, (255,69,0), (980, 0, width-980, height), 0)
+
+
+    #draw.rect(screen, (30,144,255), (400, 0, 140, height), 0)
+    #draw.rect(screen, (100,149,237), (280, 0, 120, height), 0)
+    #draw.rect(screen, (65,105,225), (0, 0, 280, height), 0)
+
+    # Volume rectangles
+    #draw.rect(screen, (255,127,80), (400, 190, 440, 130), 0)
+    #draw.rect(screen, (135,206,235), (400, 450, 440, 130), 0)
 
 while True:
     if touches:
@@ -177,11 +223,15 @@ while True:
     #print frame, timestamp
     screen.fill((0xef, 0xef, 0xef))
 
-    draw.line(screen, (0, 0, 0), (620, 0), (620, height), 4)
+    draw_lines()
+    draw_rectangles()
 
     event = pygame.event.poll()
 
-    if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+    if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE) or ws.appstatus == 'ended':
+
+	trialtime = time.time() - trialstart
+	print trialtime
 	ws.close()
 	print 'Exiting'
 	break
@@ -218,6 +268,7 @@ while True:
     # EXIT! One finger still, four motioning quickly downward.
     if len(fingers) == 1:
 	if not start: start = time.time()
+	if not trialstart: trialstart = time.time()
 	for i, finger in enumerate(fingers):
 	    vel = finger.normalized.velocity
 	    pos = finger.normalized.position
@@ -258,8 +309,8 @@ while True:
 
     else:
 	if ws.appstatus == 'player':
+	    speed = speed_coord(curpos)
 	    if abs(curvel[0]) > 0.15:
-		speed = speed_coord(curpos)
 		if prevspeed != speed:
 		    ws.set_speed(speed)
 		    prevspeed = speed
@@ -268,12 +319,14 @@ while True:
 		#screen.blit(label, (100,100))
 		if curpos[1] < 320 and curpos[1] > 0:
 		    if not prevtime: prevtime = time.time()
+		    draw.rect(screen, (255,127,80), (400, 190, 440, 130), 0)
 		    curtime = time.time() - prevtime
 		    if curtime > 0.1:
 			if volume <=100: volume += 2
 			ws.set_volume(volume)
 			prevtime = time.time()
 		elif curpos[1] > 450:
+		    draw.rect(screen, (135,206,235), (400, 450, 440, 130), 0)
 		    if not prevtime: prevtime = time.time()
 		    curtime = time.time() - prevtime
 		    if curtime > 0.1:
@@ -293,7 +346,7 @@ while True:
 		if catime > 0.375:
 		    ws.input_left()
 		    navtime = time.time()
-	    elif curpos[1] < 220 and curpos[1] > 0 and curpos[0] >  :
+	    elif curpos[1] < 220 and curpos[1] > 0:
 		if catime > 0.375:
 		    ws.input_up()
 		    navtime = time.time()

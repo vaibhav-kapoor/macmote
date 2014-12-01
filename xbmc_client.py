@@ -33,20 +33,26 @@ class DummyClient(WebSocketClient):
     def received_message(self, m):
 	try:
 
-	    print m
+	    #print m
 
 	    if len(m.data) > 0:
 		payload = json.loads(m.data)
 		method = payload['method']
-		if method == 'Player.OnStop':
+		if method == 'Player.OnStop' and not self.appstatus == 'ended':
 		    self.appstatus = 'navigation'
-		elif method == 'Player.OnPlay':
+		elif method == 'Player.OnPlay' and not self.appstatus == 'ended':
 		    self.appstatus = 'player'
+		elif method == 'Player.OnSeek':
+		    timjson = payload['params']['data']['player']['time']
+		    timsum = sum(timjson.values())
+		    if timsum <= 0:
+			self.appstatus == 'ended'
 
 	    if len(m) == 175:
 		self.close(reason='Bye bye')
 	except:
 	    return
+
 
     def play_pause(self):
         command = {"jsonrpc": "2.0", "method": "Player.PlayPause",
