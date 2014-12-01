@@ -132,6 +132,10 @@ mouse.set_visible(False)
 fingers = []
 start = None
 df = 0
+prevtime = None
+
+curpos = (0, 0)
+curvel = (0, 0)
 
 from xbmc_client import DummyClient
 
