@@ -34,30 +34,30 @@ class MTVector(ctypes.Structure):
 
 class MTData(ctypes.Structure):
     _fields_ = [
-      ("frame", ctypes.c_int),
-      ("timestamp", ctypes.c_double),
-      ("identifier", ctypes.c_int),
-      ("state", ctypes.c_int),  # Current state (of unknown meaning).
-      ("unknown1", ctypes.c_int),
-      ("unknown2", ctypes.c_int),
-      ("normalized", MTVector),  # Normalized position and vector of
-                                 # the touch (0 to 1).
-      ("size", ctypes.c_float),  # The area of the touch.
-      ("unknown3", ctypes.c_int),
-      # The following three define the ellipsoid of a finger.
-      ("angle", ctypes.c_float),
-      ("major_axis", ctypes.c_float),
-      ("minor_axis", ctypes.c_float),
-      ("unknown4", MTVector),
-      ("unknown5_1", ctypes.c_int),
-      ("unknown5_2", ctypes.c_int),
-      ("unknown6", ctypes.c_float),
+        ("frame", ctypes.c_int),
+        ("timestamp", ctypes.c_double),
+        ("identifier", ctypes.c_int),
+        ("state", ctypes.c_int),  # Current state (of unknown meaning).
+        ("unknown1", ctypes.c_int),
+        ("unknown2", ctypes.c_int),
+        ("normalized", MTVector),  # Normalized position and vector of
+        # the touch (0 to 1).
+        ("size", ctypes.c_float),  # The area of the touch.
+        ("unknown3", ctypes.c_int),
+        # The following three define the ellipsoid of a finger.
+        ("angle", ctypes.c_float),
+        ("major_axis", ctypes.c_float),
+        ("minor_axis", ctypes.c_float),
+        ("unknown4", MTVector),
+        ("unknown5_1", ctypes.c_int),
+        ("unknown5_2", ctypes.c_int),
+        ("unknown6", ctypes.c_float),
     ]
 
 MTDataRef = ctypes.POINTER(MTData)
 
 MTContactCallbackFunction = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, MTDataRef,
-    ctypes.c_int, ctypes.c_double, ctypes.c_int)
+                                             ctypes.c_int, ctypes.c_double, ctypes.c_int)
 
 MTDeviceRef = ctypes.c_void_p
 
@@ -78,7 +78,7 @@ def _cfarray_to_list(arr):
     n = CFArrayGetCount(arr)
     for i in xrange(n):
         rv.append(CFArrayGetValueAtIndex(arr, i))
-    return rv
+        return rv
 
 # }}}
 
@@ -92,7 +92,7 @@ def init_multitouch(cb):
     for device in devices:
         MTRegisterContactFrameCallback(device, cb)
         MTDeviceStart(device, 0)
-    return devices
+        return devices
 
 def stop_multitouch(devices):
     for device in devices:
@@ -103,8 +103,8 @@ def touch_callback(device, data_ptr, n_fingers, timestamp, frame):
     fingers = []
     for i in xrange(n_fingers):
         fingers.append(data_ptr[i])
-    touches[:] = [(frame, timestamp, fingers)]
-    return 0
+        touches[:] = [(frame, timestamp, fingers)]
+        return 0
 
 import pygame
 from pygame import draw, display, mouse
@@ -175,9 +175,9 @@ while True:
     event = pygame.event.poll()
 
     if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-	ws.close()
-	print 'Exiting'
-	break
+        ws.close()
+        print 'Exiting'
+        break
 
     prev = None
     for i, finger in enumerate(fingers):
@@ -192,6 +192,7 @@ while True:
         #xofs = int(finger.minor_axis / 2)
         #yofs = int(finger.major_axis / 2)
 
+<<<<<<< HEAD
 	if i == 0:
 	    curpos = p
 	    curvel = (vel.x, vel.y)
@@ -199,6 +200,11 @@ while True:
 	if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
             draw.circle(screen, 0, prev[0], prev[1], 0)
+=======
+    if prev:
+        draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
+        draw.circle(screen, 0, prev[0], prev[1], 0)
+>>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
         prev = p, r
 
         draw.circle(screen, 0, p, r, 0)
@@ -213,11 +219,20 @@ while True:
         draw.line(screen, 0, p, (posvx, posvy))
 
 
+<<<<<<< HEAD
+=======
+    #if lastgest != gest:
+    #lastgest = gest
+    #label = txtfont.render(gest, 1, (0, 0, 0))
+    #screen.blit(label, (100,100))
+
+>>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
     # EXIT! One finger still, four motioning quickly downward.
     end = time.time()
     if start: df = end - start
 
     if len(fingers) == 1:
+<<<<<<< HEAD
 	if not start: start = time.time()
 
     elif len(fingers) == 5:
@@ -284,6 +299,34 @@ while True:
 		if volume <=100: volume += 1
 		ws.set_volume(volume)
 		prevtime = time.time()
+=======
+        if not start: start = time.time()
+        elif len(fingers) == 5:
+            n_still = 0
+            n_down = 0
+            for i, finger in enumerate(fingers):
+                vel = finger.normalized.velocity
+                #print i, "%.2f, %.2f" % (vel.x, vel.y)
+                t = 0.1
+                if -t <= vel.x < t and -t <= vel.y < t:
+                    n_still += 1
+                elif -2 <= vel.x < 2 and vel.y < -4:
+                    n_down += 1
+                    if n_still == 1 and n_down == 4:
+                        break
+                    else:
+                        end = time.time()
+                        if start: df = end - start
+                        start = None
+
+    if df >= 0.1875:
+        ws.play_pause()
+
+        label = txtfont.render(str(df), 1, (0, 0, 0))
+        screen.blit(label, (100,100))
+    else:
+        pass
+>>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
 
 
     display.flip()
