@@ -169,6 +169,8 @@ while True:
 
     event = pygame.event.poll()
 
+    prev = None
+
     for i, finger in enumerate(fingers):
         pos = finger.normalized.position
         vel = finger.normalized.velocity
