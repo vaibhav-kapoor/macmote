@@ -4,7 +4,7 @@ import threading
 from ws4py.client.threadedclient import WebSocketClient
 
 import pygame
-import simplejson as json
+import json
 
 
 class DummyClient(WebSocketClient):
