@@ -115,8 +115,13 @@ from numpy import *
 
 pygame.init()
 
-devs = init_multitouch(touch_callback)
+#n_samples = 22050 * 4
+#sa = zeros((n_samples, 2))
+#sound = sndarray.make_sound(sa)
+#sa = sndarray.samples(sound)
+#sound.play(-1)
 
+devs = init_multitouch(touch_callback)
 
 flags = FULLSCREEN | HWSURFACE | DOUBLEBUF
 mode = max(display.list_modes(0, flags))
@@ -126,51 +131,53 @@ screen = display.get_surface()
 width, height = screen.get_size()
 txtfont = pygame.font.SysFont(None, 40)
 
-
 mouse.set_visible(False)
 
 fingers = []
+
 start = None
+curpos = (0, 0)
+curvel = (0, 0)
 df = 0
+prevspeed = 0
+
 prevtime = None
 navtime = None
 
-curpos = (0, 0)
-curvel = (0, 0)
-
+volume = 0
 from xbmc_client import DummyClient
-
 ws = DummyClient('ws://bh:9090/', protocols=['http-only', 'chat'])
 ws.connect()
 print 'Connected'
 
-prevspeed = 0
-volume = 0
-ppsent = False
-yvel = None
+def speed_coord(curpos):
+    speed = 0
+    if curpos[0] <= 280:
+	speed = -16
+    elif curpos[0] > 280 and curpos[0] <= 400:
+	speed = -8
+    elif curpos[0] > 400 and curpos[0] <= 540:
+	speed = -4
+    elif curpos[0] > 540 and curpos[0] <= 700:
+	speed = 1
+    elif curpos[0] > 700 and curpos[0] <= 840:
+	speed = 4
+    elif curpos[0] > 840 and curpos[0] <= 980:
+	speed = 8
+    elif curpos[0] > 980:
+	speed = 16
+
+    return speed
 
 
 while True:
-
     if touches:
         frame, timestamp, fingers = touches.pop()
 
     #print frame, timestamp
     screen.fill((0xef, 0xef, 0xef))
+
     draw.line(screen, (0, 0, 0), (620, 0), (620, height), 4)
-    draw.line(screen, (0, 0, 0), (540, height/2+50), (540, height/2-50), 4)
-    draw.line(screen, (0, 0, 0), (700, height/2+50), (700, height/2-50), 4)
-    draw.line(screen, (0, 0, 0), (840, height/2+50), (840, height/2-50), 4)
-    draw.line(screen, (0, 0, 0), (400, height/2+50), (400, height/2-50), 4)
-    draw.line(screen, (0, 0, 0), (980, height/2+50), (980, height/2-50), 4)
-    draw.line(screen, (0, 0, 0), (280, height/2+50), (280, height/2-50), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2-100), (640, height/2-100), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2-200), (640, height/2-200), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2-300), (640, height/2-300), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2), (640, height/2), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2+100), (640, height/2+100), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2+200), (640, height/2+200), 4)
-    draw.line(screen, (0, 0, 0), (600, height/2+300), (640, height/2+300), 4)
 
     event = pygame.event.poll()
 
@@ -180,10 +187,10 @@ while True:
 	break
 
     prev = None
-
     for i, finger in enumerate(fingers):
         pos = finger.normalized.position
         vel = finger.normalized.velocity
+
         x = int(pos.x * width)
         y = int((1 - pos.y) * height)
         p = (x, y)
@@ -192,41 +199,40 @@ while True:
         #xofs = int(finger.minor_axis / 2)
         #yofs = int(finger.major_axis / 2)
 
-        if i == 0:
-            curpos = p
-            curvel = (vel.x, vel.y)
-
-
         if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
             draw.circle(screen, 0, prev[0], prev[1], 0)
-
-    if prev:
-        draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
-        draw.circle(screen, 0, prev[0], prev[1], 0)
         prev = p, r
+
         draw.circle(screen, 0, p, r, 0)
         #draw.ellipse(screen, 0, (x - xofs, y - yofs, xofs * 2, yofs * 2))
+
         #sa[int(pos.x * n_samples)] = int(-32768 + pos.y * 65536)
+
         vx = vel.x
         vy = -vel.y
         posvx = x + vx / 10 * width
         posvy = y + vy / 10 * height
         draw.line(screen, 0, p, (posvx, posvy))
 
-
-    end = time.time()
-    if start: df = end - start
-
+    # EXIT! One finger still, four motioning quickly downward.
     if len(fingers) == 1:
+	if not start: start = time.time()
+	for i, finger in enumerate(fingers):
+	    vel = finger.normalized.velocity
+	    pos = finger.normalized.position
+	    x = int(pos.x * width)
+	    y = int((1 - pos.y) * height)
+	    p = (x, y)
+	    r = int(finger.size * 10)
 
-        if not start: start = time.time()
-        else: pass
+	    if i == 0:
+		curvel = (vel.x, vel.y)
+		curpos = (x, y)
 
     elif len(fingers) == 5:
         n_still = 0
         n_down = 0
-
         for i, finger in enumerate(fingers):
             vel = finger.normalized.velocity
             #print i, "%.2f, %.2f" % (vel.x, vel.y)
@@ -235,78 +241,49 @@ while True:
                 n_still += 1
             elif -2 <= vel.x < 2 and vel.y < -4:
                 n_down += 1
-            else:
-                pass
-
         if n_still == 1 and n_down == 4:
             break
-        else:
-            pass
-
     else:
-        start = None
-        ppsent = False
-        df = 0
+	if start: df = time.time() - start
+	start = None
+	curpos = (0, 0)
+
 
     if df > 0 and df <= 0.1875:
-        if not ppsent:
-	    if ws.appstatus == 'player':
-		ws.play_pause()
-		ppsent = True
-	    elif ws.appstatus == 'navigation':
-		ws.input_select()
-		ppsent = True
-        else: pass
+	if ws.appstatus == 'player':
+	    ws.play_pause()
+	elif ws.appstatus == 'navigation':
+	    ws.input_select()
+	df = 0
 
-    elif df > 0.1875:
-        if curvel[0] > 0.15 or curvel[0] < -0.15:
-	    if ws.appstatus == 'player':
-		if curpos[0] <= 280:
-		    if prevspeed != -16:
-			ws.set_speed(-16)
-			prevspeed = -16
-		    else: pass
-
-		elif curpos[0] > 280 and curpos[0] <= 400:
-		    if prevspeed != -8:
-			ws.set_speed(-8)
-			prevspeed = -8
-		    else: pass
-
-		elif curpos[0] > 400 and curpos[0] <= 540:
-		    if prevspeed != -4:
-			ws.set_speed(-4)
-			prevspeed = -4
-		    else: pass
-
-		elif curpos[0] > 540 and curpos[0] <= 700:
-		    if prevspeed != 1:
-			ws.set_speed(1)
-			prevspeed = 1
-		    else: pass
-
-		elif curpos[0] > 700 and curpos[0] <= 840:
-		    if prevspeed != 4:
-			ws.set_speed(4)
-			prevspeed = 4
-		    else: pass
-
-		elif curpos[0] > 840 and curpos[0] <= 980:
-		    if prevspeed != 8:
-			ws.set_speed(8)
-			prevspeed = 8
-		    else: pass
-
-		elif curpos[0] > 980:
-		    if prevspeed != 16:
-			ws.set_speed(16)
-			prevspeed = 16
-		    else: pass
-
-	if ws.appstatus == 'navigation':
+    else:
+	if ws.appstatus == 'player':
+	    if abs(curvel[0]) > 0.15:
+		speed = speed_coord(curpos)
+		if prevspeed != speed:
+		    ws.set_speed(speed)
+		    prevspeed = speed
+	    else:
+		#label = txtfont.render(str(volume), 1, (0, 0, 0))
+		#screen.blit(label, (100,100))
+		if curpos[1] < 320 and curpos[1] > 0:
+		    if not prevtime: prevtime = time.time()
+		    curtime = time.time() - prevtime
+		    if curtime > 0.1:
+			if volume <=100: volume += 2
+			ws.set_volume(volume)
+			prevtime = time.time()
+		elif curpos[1] > 450:
+		    if not prevtime: prevtime = time.time()
+		    curtime = time.time() - prevtime
+		    if curtime > 0.1:
+			if volume >=0: volume -= 2
+			ws.set_volume(volume)
+			prevtime = time.time()
+	else:
 	    if not navtime: navtime = time.time()
 	    catime = time.time() - navtime
-	    if curpos[0] > 720 and curpos[1] >= 220 and curpos[1] < 520:
+	    if curpos[0] > 740 and curpos[1] >= 220 and curpos[1] < 520:
 		if not navtime: navtime = time.time()
 		catime = time.time() - navtime
 		if catime > 0.375:
@@ -316,7 +293,7 @@ while True:
 		if catime > 0.375:
 		    ws.input_left()
 		    navtime = time.time()
-	    elif curpos[1] < 220:
+	    elif curpos[1] < 220 and curpos[1] > 0 and curpos[0] >  :
 		if catime > 0.375:
 		    ws.input_up()
 		    navtime = time.time()
@@ -325,42 +302,12 @@ while True:
 		    ws.input_down()
 		    navtime = time.time()
 
-
-        #if curpos[1] > 20:
-        #    if not prevtime: prevtime = time.time()
-        #    else: pass
-        #    curtime = time.time() - prevtime
-        #    if curtime > 0.1:
-        #        if volume <= 100: volume += 1
-        #        else: pass
-        #        ws.set_volume(volume)
-        #        prevtime = time.time()
-        #    else: pass
-        #else: pass
-
-        if len(fingers) == 1:
-            if not start: start = timetime()
-	    label = txtfont.render(str(curpos), 1, (0, 0, 0))
-	    screen.blit(label, (100,100))
-
-        elif len(fingers) == 5:
-            n_still = 0
-            n_down = 0
-            for i, finger in enumerate(fingers):
-                vel = finger.normalized.velocity
-                #print i, "%.2f, %.2f" % (vel.x, vel.y)
-                t = 0.1
-                if -t <= vel.x < t and -t <= vel.y < t:
-                    n_still += 1
-                elif -2 <= vel.x < 2 and vel.y < -4:
-                    n_down += 1
-                    if n_still == 1 and n_down == 4:
-                        break
-                    else:
-                        end = time.time()
-                        if start: df = end - start
-                        start = None
+	label = txtfont.render(str(curpos), 1, (0, 0, 0))
+	screen.blit(label, (100,100))
 
     display.flip()
 
 stop_multitouch(devs)
+
+
+
