@@ -1,5 +1,4 @@
 from __future__ import with_statement
-
 # {{{ MultitouchSupport
 import time
 import ctypes
@@ -24,6 +23,7 @@ MTDeviceCreateList = MultitouchSupport.MTDeviceCreateList
 MTDeviceCreateList.argtypes = []
 MTDeviceCreateList.restype = CFMutableArrayRef
 
+
 class MTPoint(ctypes.Structure):
     _fields_ = [("x", ctypes.c_float),
                 ("y", ctypes.c_float)]
@@ -37,12 +37,12 @@ class MTData(ctypes.Structure):
         ("frame", ctypes.c_int),
         ("timestamp", ctypes.c_double),
         ("identifier", ctypes.c_int),
-        ("state", ctypes.c_int),  # Current state (of unknown meaning).
+        ("state", ctypes.c_int), # Current state (of unknown meaning).
         ("unknown1", ctypes.c_int),
         ("unknown2", ctypes.c_int),
-        ("normalized", MTVector),  # Normalized position and vector of
+        ("normalized", MTVector), # Normalized position and vector of
         # the touch (0 to 1).
-        ("size", ctypes.c_float),  # The area of the touch.
+        ("size", ctypes.c_float), # The area of the touch.
         ("unknown3", ctypes.c_int),
         # The following three define the ellipsoid of a finger.
         ("angle", ctypes.c_float),
@@ -54,11 +54,11 @@ class MTData(ctypes.Structure):
         ("unknown6", ctypes.c_float),
     ]
 
+
 MTDataRef = ctypes.POINTER(MTData)
 
 MTContactCallbackFunction = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, MTDataRef,
                                              ctypes.c_int, ctypes.c_double, ctypes.c_int)
-
 MTDeviceRef = ctypes.c_void_p
 
 MTRegisterContactFrameCallback = MultitouchSupport.MTRegisterContactFrameCallback
@@ -79,8 +79,8 @@ def _cfarray_to_list(arr):
     for i in xrange(n):
         rv.append(CFArrayGetValueAtIndex(arr, i))
         return rv
-
 # }}}
+
 
 from Queue import Queue
 
@@ -88,7 +88,7 @@ touches_lock = threading.Lock()
 touches = []
 
 def init_multitouch(cb):
-    devices = _cfarray_to_list(MultitouchSupport.MTDeviceCreateList())
+    devices = _cfarray_to_list(MultitouchSupport._MTDeviceCreateList())
     for device in devices:
         MTRegisterContactFrameCallback(device, cb)
         MTDeviceStart(device, 0)
@@ -113,13 +113,8 @@ from numpy import *
 
 pygame.init()
 
-#n_samples = 22050 * 4
-#sa = zeros((n_samples, 2))
-#sound = sndarray.make_sound(sa)
-#sa = sndarray.samples(sound)
-#sound.play(-1)
-
 devs = init_multitouch(touch_callback)
+
 
 flags = FULLSCREEN | HWSURFACE | DOUBLEBUF
 mode = max(display.list_modes(0, flags))
@@ -129,20 +124,21 @@ screen = display.get_surface()
 width, height = screen.get_size()
 txtfont = pygame.font.SysFont(None, 40)
 
+
 mouse.set_visible(False)
 
-fingers = []
 
-gest = '0x'
-lastgest = '0x'
+fingers = []
 start = None
 df = 0
 
 from xbmc_client import DummyClient
 
+
 ws = DummyClient('ws://bh:9090/', protocols=['http-only', 'chat'])
 ws.connect()
 print 'Connected'
+
 
 while True:
     if touches:
@@ -153,7 +149,6 @@ while True:
     draw.line(screen, (0, 0, 0), (620, 0), (620, height), 4)
     draw.line(screen, (0, 0, 0), (570, height/2+20), (570, height/2-20), 4)
     draw.line(screen, (0, 0, 0), (670, height/2+20), (670, height/2-20), 4)
-
     event = pygame.event.poll()
 
     if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -162,10 +157,10 @@ while True:
         break
 
     prev = None
+
     for i, finger in enumerate(fingers):
         pos = finger.normalized.position
         vel = finger.normalized.velocity
-
         x = int(pos.x * width)
         y = int((1 - pos.y) * height)
         p = (x, y)
@@ -178,27 +173,18 @@ while True:
         draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
         draw.circle(screen, 0, prev[0], prev[1], 0)
         prev = p, r
-
         draw.circle(screen, 0, p, r, 0)
+
         #draw.ellipse(screen, 0, (x - xofs, y - yofs, xofs * 2, yofs * 2))
-
         #sa[int(pos.x * n_samples)] = int(-32768 + pos.y * 65536)
-
         vx = vel.x
         vy = -vel.y
         posvx = x + vx / 10 * width
         posvy = y + vy / 10 * height
         draw.line(screen, 0, p, (posvx, posvy))
 
-
-    #if lastgest != gest:
-    #lastgest = gest
-    #label = txtfont.render(gest, 1, (0, 0, 0))
-    #screen.blit(label, (100,100))
-
-    # EXIT! One finger still, four motioning quickly downward.
     if len(fingers) == 1:
-        if not start: start = time.time()
+        if not start: start = timetime()
         elif len(fingers) == 5:
             n_still = 0
             n_down = 0
@@ -222,10 +208,8 @@ while True:
 
         label = txtfont.render(str(df), 1, (0, 0, 0))
         screen.blit(label, (100,100))
-    else:
-        pass
-
 
     display.flip()
+
 
 stop_multitouch(devs)
