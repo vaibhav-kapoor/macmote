@@ -87,24 +87,26 @@ from Queue import Queue
 touches_lock = threading.Lock()
 touches = []
 
+
 def init_multitouch(cb):
-    devices = _cfarray_to_list(MultitouchSupport._MTDeviceCreateList())
+    devices = _cfarray_to_list(MultitouchSupport.MTDeviceCreateList())
     for device in devices:
         MTRegisterContactFrameCallback(device, cb)
         MTDeviceStart(device, 0)
-        return devices
+    return devices
+
 
 def stop_multitouch(devices):
     for device in devices:
         MTDeviceStop(device)
 
-@MTContactCallbackFunction
+@ContactCallbackFunction
 def touch_callback(device, data_ptr, n_fingers, timestamp, frame):
     fingers = []
     for i in xrange(n_fingers):
         fingers.append(data_ptr[i])
-        touches[:] = [(frame, timestamp, fingers)]
-        return 0
+    touches[:] = [(frame, timestamp, fingers)]
+    return 0
 
 import pygame
 from pygame import draw, display, mouse
