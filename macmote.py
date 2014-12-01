@@ -1,6 +1,7 @@
 from __future__ import with_statement
 # {{{ MultitouchSupport
 import time
+import sys
 import ctypes
 import threading
 from ctypes.util import find_library
@@ -216,6 +217,28 @@ def draw_rectangles():
     #draw.rect(screen, (255,127,80), (400, 190, 440, 130), 0)
     #draw.rect(screen, (135,206,235), (400, 450, 440, 130), 0)
 
+import ujson
+from collections import defaultdict
+
+def save_trial(filename, group, user, inputdevice, trial_time):
+    try:
+	with open(filename, 'r') as infile:
+	    jsonp = ujson.load(infile)
+    except (ValueError, IOError):
+	    jsonp = {}
+
+    jsonp[group] = jsonp.get(group, {user:{"input": {inputdevice: {"times":[]}}}})
+    jsonp[group][user] = jsonp[group].get(user, { "input": { inputdevice: {"times":[]}}})
+    jsonp[group][user]['input'][inputdevice] = jsonp[group][user]['input'].get(inputdevice, {
+	"times": [] })
+
+    jsonp[group][user]['input'][inputdevice]['times'].append(trial_time)
+
+    with open(filename, 'w') as outfile:
+	ujson.dump(jsonp, outfile)
+
+    return
+
 while True:
     if touches:
         frame, timestamp, fingers = touches.pop()
@@ -231,7 +254,8 @@ while True:
     if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE) or ws.appstatus == 'ended':
 
 	trialtime = time.time() - trialstart
-	print trialtime
+	print sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+	save_trial(sys.argv[1], sys.argv[2], sys.argv[3] , sys.argv[4], trialtime)
 	ws.close()
 	print 'Exiting'
 	break
