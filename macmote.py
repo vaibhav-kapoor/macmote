@@ -100,7 +100,7 @@ def stop_multitouch(devices):
     for device in devices:
         MTDeviceStop(device)
 
-@ContactCallbackFunction
+@MTContactCallbackFunction
 def touch_callback(device, data_ptr, n_fingers, timestamp, frame):
     fingers = []
     for i in xrange(n_fingers):
