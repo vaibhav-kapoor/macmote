@@ -192,7 +192,6 @@ while True:
         #xofs = int(finger.minor_axis / 2)
         #yofs = int(finger.major_axis / 2)
 
-<<<<<<< HEAD
 	if i == 0:
 	    curpos = p
 	    curvel = (vel.x, vel.y)
@@ -200,11 +199,9 @@ while True:
 	if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
             draw.circle(screen, 0, prev[0], prev[1], 0)
-=======
     if prev:
         draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
         draw.circle(screen, 0, prev[0], prev[1], 0)
->>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
         prev = p, r
 
         draw.circle(screen, 0, p, r, 0)
@@ -219,20 +216,12 @@ while True:
         draw.line(screen, 0, p, (posvx, posvy))
 
 
-<<<<<<< HEAD
-=======
-    #if lastgest != gest:
-    #lastgest = gest
-    #label = txtfont.render(gest, 1, (0, 0, 0))
-    #screen.blit(label, (100,100))
 
->>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
     # EXIT! One finger still, four motioning quickly downward.
     end = time.time()
     if start: df = end - start
 
     if len(fingers) == 1:
-<<<<<<< HEAD
 	if not start: start = time.time()
 
     elif len(fingers) == 5:
@@ -299,7 +288,6 @@ while True:
 		if volume <=100: volume += 1
 		ws.set_volume(volume)
 		prevtime = time.time()
-=======
         if not start: start = time.time()
         elif len(fingers) == 5:
             n_still = 0
@@ -326,8 +314,6 @@ while True:
         screen.blit(label, (100,100))
     else:
         pass
->>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
-
 
     display.flip()
 
