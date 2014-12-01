@@ -25,25 +25,28 @@ class DummyClient(WebSocketClient):
         self.send(data_provider())
 
         for i in range(0, 200, 25):
-            print i
             self.send("*" * i)
 
     def closed(self, code, reason=None):
         print "Closed down", code, reason
 
     def received_message(self, m):
-        print m
+	try:
 
-        if len(m.data) > 0:
-            payload = json.loads(m.data)
-            method = payload['method']
-            if method == 'Player.OnStop':
-                self.appstatus = 'navigation'
-            elif method == 'Player.OnPlay':
-                self.appstatus = 'player'
+	    print m
 
-        if len(m) == 175:
-            self.close(reason='Bye bye')
+	    if len(m.data) > 0:
+		payload = json.loads(m.data)
+		method = payload['method']
+		if method == 'Player.OnStop':
+		    self.appstatus = 'navigation'
+		elif method == 'Player.OnPlay':
+		    self.appstatus = 'player'
+
+	    if len(m) == 175:
+		self.close(reason='Bye bye')
+	except:
+	    return
 
     def play_pause(self):
         command = {"jsonrpc": "2.0", "method": "Player.PlayPause",
@@ -70,8 +73,18 @@ class DummyClient(WebSocketClient):
                    "params": {}}
         self.send(json.dumps(command))
 
+    def input_up(self):
+        command = {"jsonrpc": "2.0", "method": "Input.Up",
+                   "params": {}}
+        self.send(json.dumps(command))
+
+    def input_down(self):
+        command = {"jsonrpc": "2.0", "method": "Input.Down",
+                   "params": {}}
+        self.send(json.dumps(command))
+
     def input_select(self):
-        command = {"jsonrpc": "2.0", "method": "Input.Left",
+        command = {"jsonrpc": "2.0", "method": "Input.Select",
                    "params": {}}
         self.send(json.dumps(command))
 

@@ -133,6 +133,7 @@ fingers = []
 start = None
 df = 0
 prevtime = None
+navtime = None
 
 curpos = (0, 0)
 curvel = (0, 0)
@@ -157,12 +158,12 @@ while True:
     #print frame, timestamp
     screen.fill((0xef, 0xef, 0xef))
     draw.line(screen, (0, 0, 0), (620, 0), (620, height), 4)
-    draw.line(screen, (0, 0, 0), (540, height/2+20), (540, height/2-20), 4)
-    draw.line(screen, (0, 0, 0), (700, height/2+20), (700, height/2-20), 4)
-    draw.line(screen, (0, 0, 0), (840, height/2+20), (840, height/2-20), 4)
-    draw.line(screen, (0, 0, 0), (400, height/2+20), (400, height/2-20), 4)
-    draw.line(screen, (0, 0, 0), (980, height/2+20), (980, height/2-20), 4)
-    draw.line(screen, (0, 0, 0), (280, height/2+20), (280, height/2-20), 4)
+    draw.line(screen, (0, 0, 0), (540, height/2+50), (540, height/2-50), 4)
+    draw.line(screen, (0, 0, 0), (700, height/2+50), (700, height/2-50), 4)
+    draw.line(screen, (0, 0, 0), (840, height/2+50), (840, height/2-50), 4)
+    draw.line(screen, (0, 0, 0), (400, height/2+50), (400, height/2-50), 4)
+    draw.line(screen, (0, 0, 0), (980, height/2+50), (980, height/2-50), 4)
+    draw.line(screen, (0, 0, 0), (280, height/2+50), (280, height/2-50), 4)
     draw.line(screen, (0, 0, 0), (600, height/2-100), (640, height/2-100), 4)
     draw.line(screen, (0, 0, 0), (600, height/2-200), (640, height/2-200), 4)
     draw.line(screen, (0, 0, 0), (600, height/2-300), (640, height/2-300), 4)
@@ -172,6 +173,11 @@ while True:
     draw.line(screen, (0, 0, 0), (600, height/2+300), (640, height/2+300), 4)
 
     event = pygame.event.poll()
+
+    if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+	ws.close()
+	print 'Exiting'
+	break
 
     prev = None
 
@@ -244,70 +250,98 @@ while True:
 
     if df > 0 and df <= 0.1875:
         if not ppsent:
-            ws.play_pause()
-            ppsent = True
+	    if ws.appstatus == 'player':
+		ws.play_pause()
+		ppsent = True
+	    elif ws.appstatus == 'navigation':
+		ws.input_select()
+		ppsent = True
         else: pass
 
     elif df > 0.1875:
         if curvel[0] > 0.15 or curvel[0] < -0.15:
-            if curpos[0] <= 280:
-                if prevspeed != -16:
-                    ws.set_speed(-16)
-                    prevspeed = -16
-                else: pass
+	    if ws.appstatus == 'player':
+		if curpos[0] <= 280:
+		    if prevspeed != -16:
+			ws.set_speed(-16)
+			prevspeed = -16
+		    else: pass
 
-            elif curpos[0] > 280 and curpos[0] <= 400:
-                if prevspeed != -8:
-                    ws.set_speed(-8)
-                    prevspeed = -8
-                else: pass
+		elif curpos[0] > 280 and curpos[0] <= 400:
+		    if prevspeed != -8:
+			ws.set_speed(-8)
+			prevspeed = -8
+		    else: pass
 
-            elif curpos[0] > 400 and curpos[0] <= 540:
-                if prevspeed != -4:
-                    ws.set_speed(-4)
-                    prevspeed = -4
-                else: pass
+		elif curpos[0] > 400 and curpos[0] <= 540:
+		    if prevspeed != -4:
+			ws.set_speed(-4)
+			prevspeed = -4
+		    else: pass
 
-            elif curpos[0] > 540 and curpos[0] <= 700:
-                if prevspeed != 1:
-                    ws.set_speed(1)
-                    prevspeed = 1
-                else: pass
+		elif curpos[0] > 540 and curpos[0] <= 700:
+		    if prevspeed != 1:
+			ws.set_speed(1)
+			prevspeed = 1
+		    else: pass
 
-            elif curpos[0] > 700 and curpos[0] <= 840:
-                if prevspeed != 4:
-                    ws.set_speed(4)
-                    prevspeed = 4
-                else: pass
+		elif curpos[0] > 700 and curpos[0] <= 840:
+		    if prevspeed != 4:
+			ws.set_speed(4)
+			prevspeed = 4
+		    else: pass
 
-            elif curpos[0] > 840 and curpos[0] <= 980:
-                if prevspeed != 8:
-                    ws.set_speed(8)
-                    prevspeed = 8
-                else: pass
+		elif curpos[0] > 840 and curpos[0] <= 980:
+		    if prevspeed != 8:
+			ws.set_speed(8)
+			prevspeed = 8
+		    else: pass
 
-            elif curpos[0] > 980:
-                if prevspeed != 16:
-                    ws.set_speed(16)
-                    prevspeed = 16
-                else: pass
-            else: pass
+		elif curpos[0] > 980:
+		    if prevspeed != 16:
+			ws.set_speed(16)
+			prevspeed = 16
+		    else: pass
 
-        if curpos[1] > 20:
-            if not prevtime: prevtime = time.time()
-            else: pass
-            curtime = time.time() - prevtime
-            if curtime > 0.1:
-                if volume <= 100: volume += 1
-                else: pass
-                ws.set_volume(volume)
-                prevtime = time.time()
-            else: pass
-        else: pass
+	if ws.appstatus == 'navigation':
+	    if not navtime: navtime = time.time()
+	    catime = time.time() - navtime
+	    if curpos[0] > 720 and curpos[1] >= 220 and curpos[1] < 520:
+		if not navtime: navtime = time.time()
+		catime = time.time() - navtime
+		if catime > 0.375:
+		    ws.input_right()
+		    navtime = time.time()
+	    elif curpos[0] < 520 and curpos[1] >= 220 and curpos[1] < 520:
+		if catime > 0.375:
+		    ws.input_left()
+		    navtime = time.time()
+	    elif curpos[1] < 220:
+		if catime > 0.375:
+		    ws.input_up()
+		    navtime = time.time()
+	    elif curpos[1] > 520:
+		if catime > 0.375:
+		    ws.input_down()
+		    navtime = time.time()
+
+
+        #if curpos[1] > 20:
+        #    if not prevtime: prevtime = time.time()
+        #    else: pass
+        #    curtime = time.time() - prevtime
+        #    if curtime > 0.1:
+        #        if volume <= 100: volume += 1
+        #        else: pass
+        #        ws.set_volume(volume)
+        #        prevtime = time.time()
+        #    else: pass
+        #else: pass
 
         if len(fingers) == 1:
             if not start: start = timetime()
-            else: pass
+	    label = txtfont.render(str(curpos), 1, (0, 0, 0))
+	    screen.blit(label, (100,100))
 
         elif len(fingers) == 5:
             n_still = 0
@@ -326,15 +360,6 @@ while True:
                         end = time.time()
                         if start: df = end - start
                         start = None
-                else: pass
-
-        else: pass
-
-    if df >= 0.1875:
-        ws.play_pause()
-        label = txtfont.render(str(df), 1, (0, 0, 0))
-        screen.blit(label, (100,100))
-    else: pass
 
     display.flip()
 
