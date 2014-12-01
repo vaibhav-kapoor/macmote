@@ -4,8 +4,7 @@ import threading
 from ws4py.client.threadedclient import WebSocketClient
 
 import pygame
-import json
-
+import ujson as json
 
 class DummyClient(WebSocketClient):
 
@@ -19,7 +18,6 @@ class DummyClient(WebSocketClient):
         self._th.daemon = True
 
     def opened(self):
-
         def data_provider():
             for i in range(1, 200, 25):
                 yield "#" * i
@@ -34,14 +32,18 @@ class DummyClient(WebSocketClient):
         print "Closed down", code, reason
 
     def received_message(self, m):
-        jsonm = m.data
-        if jsonm['method'] == 'Player.OnPause':
-            print 'player'
-        else: pass
+        print m
+
+        if len(m.data) > 0:
+            payload = json.loads(m.data)
+            method = payload['method']
+            if method == 'Player.OnStop':
+                self.appstatus = 'navigation'
+            elif method == 'Player.OnPlay':
+                self.appstatus = 'player'
 
         if len(m) == 175:
             self.close(reason='Bye bye')
-        else: pass
 
     def play_pause(self):
         command = {"jsonrpc": "2.0", "method": "Player.PlayPause",
