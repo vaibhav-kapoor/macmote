@@ -30,49 +30,47 @@ class DummyClient(WebSocketClient):
 
     def received_message(self, m):
         jsonm = json.loads(m.data)
-        if jsonm['method'] == 'Player.OnPlay':
-            self.appstatus = 'playback'
-        elif jsonm['method'] == 'Player.OnStop':
-            self.appstatus = 'navigation'
+        #if jsonm['method'] == 'Player.OnPlay':
+        #    self.appstatus = 'playback'
+        #elif jsonm['method'] == 'Player.OnStop':
+        #    self.appstatus = 'navigation'
 
+        print m
+        print jsonm
         #print self.appstatus
 
-
-
-        #if m['method'] == 'Player.OnPlay':
-        #    print 'playing'
         if len(m) == 175:
             self.close(reason='Bye bye')
 
     def play_pause(self):
 	command = {"jsonrpc": "2.0", "method": "Player.PlayPause",
 		    "params": { "playerid": 1 }, "id": 1}
-	ws.send(json.dumps(command))
+	self.send(json.dumps(command))
 
     def set_speed(self, speed):
 	command = {"jsonrpc": "2.0", "method": "Player.SetSpeed",
 		"params": { "playerid": 1, "speed": speed }, "id": 1}
-	ws.send(json.dumps(command))
+	self.send(json.dumps(command))
 
     def set_volume(self, volume):
 	command = {"jsonrpc": "2.0", "method": "Player.SetVolume",
 		    "params": { "playerid": 1, "volume": volume }, "id": 1}
-	ws.send(json.dumps(command))
+	self.send(json.dumps(command))
 
     def input_right(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Right",
 		    "params": {}, "id": 1}
-	ws.send(json.dumps(command))
+	self.send(json.dumps(command))
 
     def input_left(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Left",
 		    "params": {}, "id": 1}
-	ws.send(json.dumps(command))
+	self.send(json.dumps(command))
 
     def input_select(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Left",
 		    "params": {}, "id": 1}
-	ws.send(json.dumps(command))
+	self.send(json.dumps(command))
 
 
 if __name__ == '__main__':
