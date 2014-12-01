@@ -8,11 +8,19 @@ import json
 
 class DummyClient(WebSocketClient):
     def __init__(self, url, protocols=None):
+<<<<<<< HEAD
 	 """docstring for __init__"""
 	WebSocketClient.__init__(self, url, protocols)
 	self.appstatus = 'navigation'
 	self._th = threading.Thread(target=self.run, name='DummyClient')
 	self._th.daemon = True
+=======
+        """docstring for __init__"""
+        WebSocketClient.__init__(self, url, protocols)
+        self.appstatus = 'navigation'
+        self._th = threading.Thread(target=self.run, name='DummyClient')
+        self._th.daemon = True
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
 
     def opened(self):
         def data_provider():
@@ -29,6 +37,7 @@ class DummyClient(WebSocketClient):
         print "Closed down", code, reason
 
     def received_message(self, m):
+<<<<<<< HEAD
 	#jsonm = json.loads(m.data)
 	#if json['method'] == 'Player.OnPlay':
 	#    self.appstatus = 'playback'
@@ -38,37 +47,74 @@ class DummyClient(WebSocketClient):
 	print m
 	jsonm = json.loads(m.data)
         #print jsonm
+=======
+        jsonm = json.loads(m.data)
+        #if jsonm['method'] == 'Player.OnPlay':
+        #    self.appstatus = 'playback'
+        #elif jsonm['method'] == 'Player.OnStop':
+        #    self.appstatus = 'navigation'
+
+        print m
+        print jsonm
+        #print self.appstatus
+
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
         if len(m) == 175:
             self.close(reason='Bye bye')
 
     def play_pause(self):
 	command = {"jsonrpc": "2.0", "method": "Player.PlayPause",
+<<<<<<< HEAD
 		    "params": { "playerid": 1 }}
+=======
+		    "params": { "playerid": 1 }, "id": 1}
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
 	self.send(json.dumps(command))
 
     def set_speed(self, speed):
 	command = {"jsonrpc": "2.0", "method": "Player.SetSpeed",
+<<<<<<< HEAD
 		"params": { "playerid": 1, "speed": speed }}
 	self.send(json.dumps(command))
 
     def set_volume(self, volume):
 	command = {"jsonrpc": "2.0", "method": "Application.SetVolume",
 		    "params": { "volume": volume }}
+=======
+		"params": { "playerid": 1, "speed": speed }, "id": 1}
+	self.send(json.dumps(command))
+
+    def set_volume(self, volume):
+	command = {"jsonrpc": "2.0", "method": "Player.SetVolume",
+		    "params": { "playerid": 1, "volume": volume }, "id": 1}
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
 	self.send(json.dumps(command))
 
     def input_right(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Right",
+<<<<<<< HEAD
 		    "params": {}}
+=======
+		    "params": {}, "id": 1}
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
 	self.send(json.dumps(command))
 
     def input_left(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Left",
+<<<<<<< HEAD
 		    "params": {}}
+=======
+		    "params": {}, "id": 1}
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
 	self.send(json.dumps(command))
 
     def input_select(self):
 	command = {"jsonrpc": "2.0", "method": "Input.Left",
+<<<<<<< HEAD
 		    "params": {}}
+=======
+		    "params": {}, "id": 1}
+>>>>>>> c76db8bc88ae941f705e8ccf22b9653abd0e322f
 	self.send(json.dumps(command))
 
 
