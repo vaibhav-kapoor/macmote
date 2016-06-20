@@ -188,11 +188,7 @@ while True:
         y = int((1 - pos.y) * height)
         p = (x, y)
         r = int(finger.size * 10)
-        #print "finger", i, "at", (x, y)
-        #xofs = int(finger.minor_axis / 2)
-        #yofs = int(finger.major_axis / 2)
 
-<<<<<<< HEAD
 	if i == 0:
 	    curpos = p
 	    curvel = (vel.x, vel.y)
@@ -200,17 +196,12 @@ while True:
 	if prev:
             draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
             draw.circle(screen, 0, prev[0], prev[1], 0)
-=======
     if prev:
         draw.line(screen, (0xd0, 0xd0, 0xd0), p, prev[0], 3)
         draw.circle(screen, 0, prev[0], prev[1], 0)
->>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
         prev = p, r
 
         draw.circle(screen, 0, p, r, 0)
-        #draw.ellipse(screen, 0, (x - xofs, y - yofs, xofs * 2, yofs * 2))
-
-        #sa[int(pos.x * n_samples)] = int(-32768 + pos.y * 65536)
 
         vx = vel.x
         vy = -vel.y
@@ -219,20 +210,12 @@ while True:
         draw.line(screen, 0, p, (posvx, posvy))
 
 
-<<<<<<< HEAD
-=======
-    #if lastgest != gest:
-    #lastgest = gest
-    #label = txtfont.render(gest, 1, (0, 0, 0))
-    #screen.blit(label, (100,100))
 
->>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
     # EXIT! One finger still, four motioning quickly downward.
     end = time.time()
     if start: df = end - start
 
     if len(fingers) == 1:
-<<<<<<< HEAD
 	if not start: start = time.time()
 
     elif len(fingers) == 5:
@@ -240,7 +223,6 @@ while True:
         n_down = 0
         for i, finger in enumerate(fingers):
             vel = finger.normalized.velocity
-            #print i, "%.2f, %.2f" % (vel.x, vel.y)
             t = 0.1
             if -t <= vel.x < t and -t <= vel.y < t:
                 n_still += 1
@@ -251,9 +233,6 @@ while True:
     else:
 	start = None
 	ppsent = False
-	#if prevspeed != 1:
-    	    #ws.set_speed(1)
-	    #prevspeed = 1
 	df = 0
 
     if df > 0 and df <= 0.1875:
@@ -299,14 +278,12 @@ while True:
 		if volume <=100: volume += 1
 		ws.set_volume(volume)
 		prevtime = time.time()
-=======
         if not start: start = time.time()
         elif len(fingers) == 5:
             n_still = 0
             n_down = 0
             for i, finger in enumerate(fingers):
                 vel = finger.normalized.velocity
-                #print i, "%.2f, %.2f" % (vel.x, vel.y)
                 t = 0.1
                 if -t <= vel.x < t and -t <= vel.y < t:
                     n_still += 1
@@ -326,7 +303,6 @@ while True:
         screen.blit(label, (100,100))
     else:
         pass
->>>>>>> 400b4f8fa839be578fd6ac16d7243b9dedd3a8ca
 
 
     display.flip()

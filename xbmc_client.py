@@ -29,13 +29,7 @@ class DummyClient(WebSocketClient):
         print "Closed down", code, reason
 
     def received_message(self, m):
-	#jsonm = json.loads(m.data)
-	#if json['method'] == 'Player.OnPlay':
-	#    self.appstatus = 'playback'
-	#elif json['method'] == 'Player.OnStop':
-	#    self.appstatus = 'navigation'
 
-	print m
 	jsonm = json.loads(m.data)
         #print jsonm
         if len(m) == 175:
